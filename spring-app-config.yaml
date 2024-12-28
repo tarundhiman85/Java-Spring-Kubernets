@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spring-app-config
+data:
+  application.properties: |
+    spring.application.name=spring-app
+    spring.datasource.url=jdbc:h2:mem:todo-db
+    spring.datasource.driverClassName=org.h2.Driver
+    spring.datasource.username=sat
+    spring.datasource.password=password
+    spring.jpa.hibernate.ddl-auto=update
+    spring.h2.console.enabled=true
+    spring.h2.console.path=/h2-console
+    spring.h2.console.settings.web-allow-others=true

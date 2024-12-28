@@ -5,7 +5,7 @@ metadata:
   labels:
     app: spring-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: spring-app
@@ -17,9 +17,19 @@ spec:
     spec:
       containers:
         - name: spring-app
-          image: tarundhiman/spring-app
+          image: tarundhiman/spring-app:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config/application.properties
+              subPath: application.properties
+          args:
+            - "--spring.config.location=file:/config/application.properties"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: spring-app-config
       restartPolicy: Always
       
