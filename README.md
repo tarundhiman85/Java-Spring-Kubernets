@@ -94,6 +94,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: tarun-spring-app
+```
 
 ### Example: Deployment
 
@@ -133,7 +134,7 @@ spec:
           configMap:
             name: spring-app-config
       restartPolicy: Always
-
+```
 ### Example: Service
 ```yaml
 apiVersion: v1
@@ -148,7 +149,7 @@ spec:
   ports:
     - port: 80
       targetPort: 8080
-
+```
 ### Example: Ingress
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -171,7 +172,7 @@ spec:
                 name: spring-app-service
                 port:
                   number: 80
-
+```
 ### Example: ConfigMap
 ```yaml
 apiVersion: v1
@@ -190,11 +191,84 @@ data:
     spring.h2.console.enabled=true
     spring.h2.console.path=/h2-console
     spring.h2.console.settings.web-allow-others=true
-
+```
 ## How to Deploy
 
 ### 1. Create the Namespace
 
 ```bash
 kubectl apply -f tarun-spring-app.yaml
+```
 
+### 2. Apply the Resources
+Apply the ConfigMap, Deployment, Service, and Ingress. For example:
+
+```bash
+kubectl apply -f spring-app-configmap.yaml
+kubectl apply -f spring-app-deployment.yaml
+kubectl apply -f spring-app-service.yaml
+kubectl apply -f spring-app-ingress.yaml
+```
+### 3. Verify Everything Is Running
+
+```bash
+kubectl get all -n tarun-spring-app
+```
+You should see:
+1.**Pods** (2 replicas, e.g., spring-app-xxxxxx-1, spring-app-xxxxxx-2)
+2.**Deployment** (spring-app)
+3.**Service** (spring-app-service)
+4.**Ingress** (spring-app-ingress)
+
+```bash
+kubectl logs -n tarun-spring-app -l app=spring-app
+```
+### Testing the Application
+1. **DNS / Hosts File**
+Ensure spring-app.example.com resolves to your Ingress controller’s IP (e.g., by configuring DNS or /etc/hosts if testing locally via minikube).
+
+2. **Access the App**
+Open a browser to http://spring-app.example.com/
+You should see the Spring application’s default page or any endpoints you’ve defined.
+
+3. **Verify ConfigMap is Loaded**
+Check the app logs for references to sat or other properties from application.properties.
+
+4. **Verify Load Balancing**
+Since there are 2 replicas, requests should be distributed between both Pods. You can see this by repeatedly hitting the endpoint and checking the logs or the Pod IP from which the response is served.
+
+### Notes on Configuration
+**Externalized Configuration**
+By specifying args: --spring.config.location=file:/config/application.properties, you instruct Spring Boot to load from the ConfigMap-mounted volume.
+
+**Scaling**
+Currently set to 2 replicas in the Deployment. To scale up (e.g., 3 replicas):
+
+```bash
+kubectl scale deployment spring-app --replicas=3 -n tarun-spring-app
+```
+
+**ContainerPort vs Service Port**
+The container listens on 8080, while the Service is bound to 80 internally. The Ingress routes traffic from 80 (or 443 for HTTPS) to the Service’s port 80, which in turn routes to 8080 in your container.
+
+**Multiple Environments**
+For staging or production, you can maintain separate ConfigMaps with environment-specific properties (e.g., spring-app-config-staging, spring-app-config-prod) and mount them as needed.
+
+### Cleanup
+To remove all resources, run:
+
+```bash
+kubectl delete -f spring-app-ingress.yaml
+kubectl delete -f spring-app-service.yaml
+kubectl delete -f spring-app-deployment.yaml
+kubectl delete -f spring-app-configmap.yaml
+kubectl delete namespace tarun-spring-app
+```
+This ensures the namespace and all resources within it are deleted.
+
+### Contributing
+Contributions are welcome! Feel free to submit pull requests with improvements or open issues for any bug reports or feature requests.
+
+### License
+This project is licensed under the MIT License.
+You’re free to use, modify, and distribute the code under its terms.
