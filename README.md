@@ -6,6 +6,7 @@ This repository demonstrates how to deploy a Spring Boot application to Kubernet
 2. **Service**  
 3. **Ingress**  
 4. **ConfigMap** (mounted as a **Volume**)
+5. **Secret**
 
 > **Note**: These examples assume:
 > - You already have a Kubernetes cluster.
@@ -49,7 +50,7 @@ This project packages a Spring Boot application (`tarundhiman/spring-app:v1`) in
 
 A simplified diagram of how traffic flows from the end user into the cluster and how the Pods receive their configuration:
 
-![spring-app-architecture-kubernetes](https://github.com/user-attachments/assets/97be3855-d5a9-4462-9565-56339a7871bb)
+![image](https://github.com/user-attachments/assets/fa0a6255-961a-4e93-b8e7-ef5b0c27c1b6)
 
 ## Detailed Flow
 
@@ -81,11 +82,13 @@ A simplified diagram of how traffic flows from the end user into the cluster and
 
 Below are the primary files in this setup:
 
-1. **Namespace** (`tarun-spring-app.yaml`)  
-2. **Deployment** (`spring-app-deployment.yaml`)  
-3. **Service** (`spring-app-service.yaml`)  
-4. **Ingress** (`spring-app-ingress.yaml`)  
-5. **ConfigMap** (`spring-app-configmap.yaml`)  
+1. **Namespace** (`namespace.yaml`)  
+2. **Deployment** (`deployment.yaml`)  
+3. **Service** (`service.yaml`)  
+4. **Ingress** (`ingress.yaml`)  
+5. **ConfigMap** (`configmap.yaml`)
+6. **Secret** ( `secret.yaml`)
+
 
 ### Example: Namespace
 
@@ -123,12 +126,28 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+
           volumeMounts:
             - name: config-volume
               mountPath: /config/application.properties
               subPath: application.properties
+
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: spring-app-secret
+                  key: username
+
+            - name: DB_PASSWORD
+              valueFrom:
+                  secretKeyRef:
+                    name: spring-app-secret
+                    key: password
+
           args:
             - "--spring.config.location=file:/config/application.properties"
+
       volumes:
         - name: config-volume
           configMap:
@@ -185,13 +204,28 @@ data:
     spring.application.name=spring-app
     spring.datasource.url=jdbc:h2:mem:todo-db
     spring.datasource.driverClassName=org.h2.Driver
-    spring.datasource.username=sat
-    spring.datasource.password=password
+    spring.datasource.username=${DB_USERNAME:defaultUser}
+    spring.datasource.password=${DB_PASSWORD:defaultPass}
     spring.jpa.hibernate.ddl-auto=update
     spring.h2.console.enabled=true
     spring.h2.console.path=/h2-console
     spring.h2.console.settings.web-allow-others=true
 ```
+### Example: Secret 
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: spring-app-secret
+  namespace: tarun-spring-app
+type: kubernetes.io/basic-auth
+stringData:
+  username: "c2F0"
+  password: "cGFzc3dvcmQ="
+```
+## Secrets Management
+Store sensitive information—like database credentials or API keys—in Kubernetes Secrets, not in plain text or ConfigMaps. This ensures credentials remain obfuscated in the cluster and reduces the risk of accidental disclosure.
+
 ## How to Deploy
 
 ### 1. Create the Namespace
@@ -204,10 +238,11 @@ kubectl apply -f tarun-spring-app.yaml
 Apply the ConfigMap, Deployment, Service, and Ingress. For example:
 
 ```bash
-kubectl apply -f spring-app-configmap.yaml
-kubectl apply -f spring-app-deployment.yaml
-kubectl apply -f spring-app-service.yaml
-kubectl apply -f spring-app-ingress.yaml
+kubectl apply -f configmap.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml
+kubectl apply -f secret.yaml
 ```
 ### 3. Verify Everything Is Running
 
@@ -258,10 +293,11 @@ For staging or production, you can maintain separate ConfigMaps with environment
 To remove all resources, run:
 
 ```bash
-kubectl delete -f spring-app-ingress.yaml
-kubectl delete -f spring-app-service.yaml
-kubectl delete -f spring-app-deployment.yaml
-kubectl delete -f spring-app-configmap.yaml
+kubectl delete -f singress.yaml
+kubectl delete -f service.yaml
+kubectl delete -f deployment.yaml
+kubectl delete -f configmap.yaml
+kubectl delete -f secret.yaml
 kubectl delete namespace tarun-spring-app
 ```
 This ensures the namespace and all resources within it are deleted.
@@ -277,29 +313,26 @@ Below are some potential enhancements and next steps for this project:
 2. **CI/CD Integration**
    - Integrate a CI/CD pipeline (e.g., GitHub Actions, GitLab CI, or Jenkins) to automatically build and test your Spring Boot application, then deploy updates to Kubernetes when new changes are merged.
 
-3. **Secrets Management**
-   - Store sensitive information like database credentials or API keys in Kubernetes Secrets rather than in ConfigMaps or your source code.
-
-4. **TLS/HTTPS**
+3. **TLS/HTTPS**
    - Enhance security by setting up TLS termination at the Ingress level (e.g., using cert-manager to provision and renew Let’s Encrypt certificates).
 
-5. **Observability & Monitoring**
+4. **Observability & Monitoring**
    - Add monitoring with Prometheus and Grafana for metrics (CPU usage, memory, custom Spring Boot metrics).
    - Enable distributed tracing using tools like Jaeger or Zipkin to better understand request flow and performance bottlenecks.
 
-6. **Centralized Logging**
+5. **Centralized Logging**
    - Integrate ELK (Elasticsearch, Logstash, Kibana) or EFK (Elasticsearch, Fluentd, Kibana) stack to collect and analyze logs from all pods in one place.
 
-7. **Blue-Green / Canary Deployments**
+6. **Blue-Green / Canary Deployments**
    - Explore advanced deployment strategies like blue-green or canary deployments using tools such as Argo Rollouts to reduce downtime and risk during application updates.
 
-8. **Multi-Environment Management**
+7. **Multi-Environment Management**
    - Create separate overlays or parameterized manifests (e.g., using Helm or Kustomize) for staging, QA, and production environments.
 
-9. **Testing Tools**
+8. **Testing Tools**
    - Add integration tests or end-to-end tests (e.g., using Cypress or Postman) that can run automatically after deployment to confirm functionality.
 
-10. **GitOps Workflow**
+9. **GitOps Workflow**
     - Manage your Kubernetes manifests with a GitOps tool (e.g., Argo CD or Flux) to achieve a fully declarative and automated deployment process.
 
 ---
