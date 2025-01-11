@@ -22,12 +22,28 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+
           volumeMounts:
             - name: config-volume
               mountPath: /config/application.properties
               subPath: application.properties
+
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: spring-app-secret
+                  key: username
+
+            - name: DB_PASSWORD
+              valueFrom:
+                  secretKeyRef:
+                    name: spring-app-secret
+                    key: password
+
           args:
             - "--spring.config.location=file:/config/application.properties"
+
       volumes:
         - name: config-volume
           configMap:
