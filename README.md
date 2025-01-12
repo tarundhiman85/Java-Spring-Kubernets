@@ -220,8 +220,8 @@ metadata:
   namespace: tarun-spring-app
 type: kubernetes.io/basic-auth
 stringData:
-  username: "c2F0"
-  password: "cGFzc3dvcmQ="
+  username: "BASE64EncodedUsername"
+  password: "BASE64EncodedPassword"
 ```
 ## Secrets Management
 Store sensitive information—like database credentials or API keys—in Kubernetes Secrets, not in plain text or ConfigMaps. This ensures credentials remain obfuscated in the cluster and reduces the risk of accidental disclosure.
