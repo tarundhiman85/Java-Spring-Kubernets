@@ -14,3 +14,5 @@ data:
     spring.h2.console.enabled=true
     spring.h2.console.path=/h2-console
     spring.h2.console.settings.web-allow-others=true
+    management.endpoints.web.exposure.include=prometheus
+    management.endpoint.health.show-details=always
