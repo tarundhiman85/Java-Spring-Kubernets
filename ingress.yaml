@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: spring-app-ingress
   namespace: tarun-spring-app
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
@@ -18,3 +16,10 @@ spec:
                 name: spring-app-service
                 port:
                   number: 80
+          - path: /prometheus
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-service
+                port:
+                  number: 90
