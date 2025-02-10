@@ -15,19 +15,39 @@ spec:
       name: spring-app
       labels:
         app: spring-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       containers:
         - name: spring-app
-          image: tarundhiman/spring-app:v1
+          image: tarundhiman/spring-app:v3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+
           volumeMounts:
             - name: config-volume
               mountPath: /config/application.properties
               subPath: application.properties
+
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: spring-app-secret
+                  key: username
+
+            - name: DB_PASSWORD
+              valueFrom:
+                  secretKeyRef:
+                    name: spring-app-secret
+                    key: password
+
           args:
             - "--spring.config.location=file:/config/application.properties"
+
       volumes:
         - name: config-volume
           configMap:
