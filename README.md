@@ -55,7 +55,8 @@ This project packages a Spring Boot application (`tarundhiman/spring-app:v1`) in
 
 A simplified diagram of how traffic flows from the end user into the cluster and how the Pods receive their configuration:
 
-![image](https://github.com/user-attachments/assets/fa0a6255-961a-4e93-b8e7-ef5b0c27c1b6)
+![image](https://github.com/user-attachments/assets/f3f0c111-4b59-4f5d-8213-eb9af7d6e949)
+
 
 ## Detailed Flow
 
