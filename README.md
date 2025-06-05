@@ -403,6 +403,20 @@ kubectl delete namespace tarun-spring-app
 ```
 This ensures the namespace and all resources within it are deleted.
 
+## Deploying with Terraform
+
+The `terraform` directory provides the same Kubernetes resources using Terraform.
+The configuration is split across multiple `.tf` files for readability and Terraform automatically loads all of them.
+Run the following commands to apply them:
+
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+
+Ensure your kubeconfig is accessible (by default `~/.kube/config`).
+
 ## Future Enhancements
 
 Below are some potential enhancements and next steps for this project:
